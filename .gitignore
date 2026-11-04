@@ -1,0 +1,17 @@
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files and logs
+*.log
+*.tmp
+*.temp
+
+# Compressed archive (redundant with GitHub's native archive downloads)
+*.zip
+
+# Editor and environment
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Distributed Operating System - Interactive 3D Educational Simulation</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Three.js and Dependencies (Local with CDN Fallback) -->
+  <script src="vendor/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <script src="vendor/OrbitControls.js"></script>
+  <script>
+    if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+    }
+  </script>
+  <script src="vendor/tween.umd.js"></script>
+  <script>
+    if (typeof TWEEN === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"><\/script>');
+    }
+  </script>
+</head>
+<body>
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Ambient Holographic Grid Overlay -->
+  <div class="cyber-overlay pointer-events-none"></div>
+
+  <!-- TOP HEADER / NAVBAR -->
+  <header id="top-navbar">
+    <div class="brand">
+      <div class="brand-badge">
+        <span class="pulsing-dot"></span>
+        <span class="badge-text">DOS LAB 3.0</span>
+      </div>
+      <div class="brand-title-group">
+        <h1 class="brand-title">DISTRIBUTED OPERATING SYSTEM</h1>
+        <p class="brand-subtitle">Interactive 3D Simulation • Need, Importance & Design Goals</p>
+      </div>
+    </div>
+
+    <!-- Cluster Quick Telemetry -->
+    <div class="cluster-telemetry">
+      <div class="telemetry-item">
+        <span class="telemetry-label">SYSTEM STATE</span>
+        <span class="telemetry-val text-green" id="telemetry-state">SINGLE SYSTEM IMAGE</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">ACTIVE NODES</span>
+        <span class="telemetry-val text-cyan" id="telemetry-nodes">5 / 5 CONNECTED</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">CLUSTER LOAD</span>
+        <span class="telemetry-val text-yellow" id="telemetry-load">24% IDLE</span>
+      </div>
+    </div>
+
+    <!-- Action Tools -->
+    <div class="navbar-actions">
+      <!-- Camera View Preset Dropdown -->
+      <div class="camera-selector">
+        <label for="camera-view-select" class="sr-only">Camera View</label>
+        <select id="camera-view-select" title="Switch Camera Angle">
+          <option value="overview">🎥 Overview (Full Lab)</option>
+          <option value="controller">🌀 DOS Controller Core</option>
+          <option value="workstations">💻 Workstations View</option>
+          <option value="database">🗄️ Database Cluster</option>
+          <option value="printer">🖨️ Shared Printer</option>
+        </select>
+      </div>
+
+      <!-- Sound Toggle Button -->
+      <button id="sound-btn" class="nav-btn" title="Toggle Futuristic Audio Effects">
+        <span id="sound-icon">🔊</span>
+        <span class="nav-btn-text">Audio: ON</span>
+      </button>
+
+      <!-- Presentation Mode Toggle Button -->
+      <button id="presentation-btn" class="nav-btn btn-highlight" title="Toggle Classroom Presentation Mode">
+        <span class="btn-icon">📽️</span>
+        <span class="nav-btn-text">Presentation Mode</span>
+      </button>
+
+      <!-- Reset Simulation Button -->
+      <button id="reset-sim-btn" class="nav-btn" title="Reset Simulation to Initial State">
+        <span>🔄</span>
+        <span class="nav-btn-text">Reset</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN INTERACTIVE SIDEBAR CONTROLS -->
+  <aside id="sidebar-controls" class="custom-scrollbar">
+    <div class="sidebar-header">
+      <div class="sidebar-title-row">
+        <h2 class="sidebar-title">SEMINAR CURRICULUM</h2>
+        <span class="concept-counter" id="active-track-badge">6 MODULES</span>
+      </div>
+      <p class="sidebar-desc">Switch between Need & Importance and the Six Major Design Goals.</p>
+    </div>
+
+    <!-- SECTION TRACK SWITCHER -->
+    <div class="sidebar-track-selector">
+      <button class="track-tab active" id="tab-track-need" data-track="need">
+        <span class="track-icon">🌐</span>
+        <span class="track-tab-info">
+          <strong class="track-name">Need & Importance</strong>
+          <small class="track-sub">6 Core Architecture Demonstrations</small>
+        </span>
+      </button>
+      <button class="track-tab" id="tab-track-goals" data-track="goals">
+        <span class="track-icon">🎯</span>
+        <span class="track-tab-info">
+          <strong class="track-name">Six Major Design Goals</strong>
+          <small class="track-sub">Transparency, Openness, Flexibility...</small>
+        </span>
+      </button>
+    </div>
+
+    <!-- ====================================================================
+         TRACK 1: NEED & IMPORTANCE (Original 6 Core Demonstrations)
+         ==================================================================== -->
+    <div id="section-need-importance" class="track-section active">
+      <div class="section-lead-badge">
+        <span class="lead-icon">🌐</span>
+        <span class="lead-text">PART 1: NEED & IMPORTANCE OF DISTRIBUTED OS</span>
+      </div>
+
+      <div class="modules-accordion">
+
+        <!-- MODULE A: RESOURCE SHARING -->
+        <div class="concept-card active" data-concept="resource-sharing">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">01</span> RESOURCE SHARING</div>
+            <h3 class="concept-name">Hardware & Data Sharing</h3>
+            <p class="concept-summary">Multiple autonomous nodes share centralized peripherals and clustered data with concurrency control.</p>
+          </div>
+          <div class="concept-body">
+            <p class="action-caption">Interactive Experiments:</p>
+            <div class="btn-grid">
+              <button class="sim-btn" id="btn-share-db">
+                <span class="btn-icon">🗄️</span>
+                <span class="btn-text">
+                  <strong>Access Shared Database</strong>
+                  <small>Node 1 & Node 3 query records</small>
+                </span>
+              </button>
+              <button class="sim-btn" id="btn-share-printer">
+                <span class="btn-icon">🖨️</span>
+                <span class="btn-text">
+                  <strong>Send Shared Print Job</strong>
+                  <small>Node 2 spools exam docs</small>
+                </span>
+              </button>
+            </div>
+            <div class="concept-explanation" id="expl-resource-sharing">
+              <strong>Key Benefit:</strong> Cost efficiency and data consistency. Hardware (laser printer) and software/data (central DBMS) are accessed transparently without replicating expensive hardware per user.
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE B: PARALLEL PROCESSING -->
+        <div class="concept-card" data-concept="parallel-processing">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">02</span> PERFORMANCE BOOST</div>
+            <h3 class="concept-name">Parallel Computing & Speedup</h3>
+            <p class="concept-summary">Distribute large computational workloads across multiple CPU nodes simultaneously.</p>
+          </div>
+          <div class="concept-body">
+            <div class="task-spec-box">
+              <div class="spec-row">
+                <span class="spec-label">Workload:</span>
+                <span class="spec-val">600 Student Exam Records</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">Partitioning:</span>
+                <span class="spec-val text-cyan">3 Sub-Tasks × 200 Records</span>
+              </div>
+            </div>
+            <button class="sim-btn btn-primary" id="btn-start-parallel">
+              <span class="btn-icon">⚡</span>
+              <span class="btn-text">
+                <strong>Execute Parallel Task</strong>
+                <small>Divide workload across Nodes 1, 2, 3</small>
+              </span>
+            </button>
+            <div class="benchmark-container hidden" id="parallel-benchmark">
+              <div class="benchmark-title">Execution Benchmark Comparison:</div>
+              <div class="benchmark-bars">
+                <div class="bar-group">
+                  <span class="bar-name">Single Standalone PC:</span>
+                  <div class="bar-track"><div class="bar-fill single-pc" style="width: 100%;"></div></div>
+                  <span class="bar-time">12.0s</span>
+                </div>
+                <div class="bar-group">
+                  <span class="bar-name">3 Distributed Nodes:</span>
+                  <div class="bar-track"><div class="bar-fill parallel-pc" id="parallel-progress-bar" style="width: 33%;"></div></div>
+                  <span class="bar-time text-green" id="parallel-time-val">4.0s (3x Speedup!)</span>
+                </div>
+              </div>
+            </div>
+            <div class="concept-explanation" id="expl-parallel">
+              <strong>Key Benefit:</strong> High computational throughput. Complex calculations and data analysis finish in a fraction of the time by leveraging idle network CPUs.
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE C: RELIABILITY & FAULT TOLERANCE -->
+        <div class="concept-card" data-concept="fault-tolerance">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">03</span> RELIABILITY</div>
+            <h3 class="concept-name">Fault Tolerance & Failover</h3>
+            <p class="concept-summary">System remains fully operational despite hardware crashes via replication and automatic failover.</p>
+          </div>
+          <div class="concept-body">
+            <div class="server-status-grid">
+              <div class="server-node-indicator active" id="indicator-srv-a">
+                <div class="srv-badge green">PRIMARY</div>
+                <div class="srv-name">Server DB-01</div>
+                <div class="srv-state" id="state-srv-a">ONLINE (100% HEALTH)</div>
+              </div>
+              <div class="server-node-indicator" id="indicator-srv-b">
+                <div class="srv-badge cyan">STANDBY REPLICA</div>
+                <div class="srv-name">Server DB-02</div>
+                <div class="srv-state" id="state-srv-b">SYNCED & READY</div>
+              </div>
+            </div>
+            <div class="btn-grid">
+              <button class="sim-btn btn-danger" id="btn-crash-server">
+                <span class="btn-icon">💥</span>
+                <span class="btn-text">
+                  <strong>Simulate Server Failure</strong>
+                  <small>Crash DB-01 and trigger failover</small>
+                </span>
+              </button>
+              <button class="sim-btn" id="btn-recover-server" disabled>
+                <span class="btn-icon">🛡️</span>
+                <span class="btn-text">
+                  <strong>Restore Primary Server</strong>
+                  <small>Re-sync state & heal cluster</small>
+                </span>
+              </button>
+            </div>
+            <div class="concept-explanation" id="expl-fault">
+              <strong>Key Benefit:</strong> High Availability (99.999% uptime). Redundancy guarantees that single-point hardware failures do not stop student or business operations.
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE D: SCALABILITY -->
+        <div class="concept-card" data-concept="scalability">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">04</span> SCALABILITY</div>
+            <h3 class="concept-name">Horizontal Scale-Out</h3>
+            <p class="concept-summary">Dynamically add or remove computer nodes without rebooting or halting ongoing services.</p>
+          </div>
+          <div class="concept-body">
+            <div class="scale-stat-card">
+              <div class="stat-unit">
+                <span class="stat-num text-cyan" id="scale-count">5</span>
+                <span class="stat-lbl">Connected Workstations</span>
+              </div>
+              <div class="stat-unit">
+                <span class="stat-num text-green" id="scale-mips">75.0</span>
+                <span class="stat-lbl">Cluster Capacity (GFLOPS)</span>
+              </div>
+            </div>
+            <div class="btn-grid">
+              <button class="sim-btn" id="btn-add-node">
+                <span class="btn-icon">➕</span>
+                <span class="btn-text">
+                  <strong>Add Computer</strong>
+                  <small>Dynamically join new node</small>
+                </span>
+              </button>
+              <button class="sim-btn" id="btn-remove-node">
+                <span class="btn-icon">➖</span>
+                <span class="btn-text">
+                  <strong>Remove Computer</strong>
+                  <small>Gracefully decommission</small>
+                </span>
+              </button>
+            </div>
+            <div class="concept-explanation" id="expl-scalability">
+              <strong>Key Benefit:</strong> Elastic growth. Instead of replacing costly mainframes, organizations incrementally attach affordable commercial PCs to expand processing capacity.
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE E: COMMUNICATION -->
+        <div class="concept-card" data-concept="communication">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">05</span> COMMUNICATION</div>
+            <h3 class="concept-name">Inter-Process Message Passing</h3>
+            <p class="concept-summary">Autonomous systems exchange packets, RPCs, and state synchronization across the network bus.</p>
+          </div>
+          <div class="concept-body">
+            <div class="routing-form">
+              <div class="form-row">
+                <label for="comm-src">Source Node:</label>
+                <select id="comm-src">
+                  <option value="1">Node 1 (Admin Workstation)</option>
+                  <option value="2">Node 2 (Compute Unit A)</option>
+                  <option value="3">Node 3 (Compute Unit B)</option>
+                  <option value="4">Node 4 (Data Terminal)</option>
+                  <option value="5" selected>Node 5 (Lab Client)</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label for="comm-dest">Destination Node:</label>
+                <select id="comm-dest">
+                  <option value="1" selected>Node 1 (Admin Workstation)</option>
+                  <option value="2">Node 2 (Compute Unit A)</option>
+                  <option value="3">Node 3 (Compute Unit B)</option>
+                  <option value="4">Node 4 (Data Terminal)</option>
+                  <option value="5">Node 5 (Lab Client)</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label for="comm-protocol">Protocol Type:</label>
+                <select id="comm-protocol">
+                  <option value="RPC">Remote Procedure Call (RPC)</option>
+                  <option value="IPC">Message Queue / IPC</option>
+                  <option value="SYNC">Distributed Barrier Sync</option>
+                </select>
+              </div>
+            </div>
+            <button class="sim-btn btn-primary" id="btn-send-message">
+              <span class="btn-icon">📡</span>
+              <span class="btn-text">
+                <strong>Transmit Network Message</strong>
+                <small>Animate packet & acknowledgement</small>
+              </span>
+            </button>
+            <div class="concept-explanation" id="expl-comm">
+              <strong>Key Benefit:</strong> Network Transparency. Distributed OS hides underlying TCP/IP socket complexity so programs call remote functions as if they were local.
+            </div>
+          </div>
+        </div>
+
+        <!-- MODULE F: REAL-WORLD APPLICATIONS -->
+        <div class="concept-card" data-concept="real-world">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">06</span> REAL-WORLD USE</div>
+            <h3 class="concept-name">Modern Industry Applications</h3>
+            <p class="concept-summary">Explore where Distributed Systems drive our global economy and daily technology.</p>
+          </div>
+          <div class="concept-body">
+            <p class="action-caption">Select an industry application to inspect:</p>
+            <div class="app-buttons-list">
+              <button class="app-chip active" data-app="cloud">☁️ Cloud Computing</button>
+              <button class="app-chip" data-app="banking">🏦 Online Banking</button>
+              <button class="app-chip" data-app="ecommerce">🛒 E-Commerce & Retail</button>
+              <button class="app-chip" data-app="science">🔬 Scientific Research</button>
+              <button class="app-chip" data-app="database">🌐 Distributed Databases</button>
+            </div>
+            <div class="app-detail-card" id="app-display-card">
+              <h4 class="app-title" id="app-card-title">Cloud Computing (AWS / GCP / Azure)</h4>
+              <p class="app-text" id="app-card-desc">Hyper-scale data centers pool millions of compute instances to provide on-demand resources, container orchestration (Kubernetes), and elastic auto-scaling.</p>
+              <div class="app-example-box" id="app-card-example">
+                <strong>Real-World Case:</strong> Netflix streams billions of video hours across thousands of distributed cloud nodes worldwide without interruptions.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         TRACK 2: SIX MAJOR DESIGN GOALS (Matching Seminar Slide Deck)
+         ==================================================================== -->
+    <div id="section-design-goals" class="track-section hidden">
+      <!-- Seminar Slide Header Banner -->
+      <div class="design-goals-banner">
+        <div class="dg-banner-sub">03 · DESIGN GOALS · MADHAVAN G</div>
+        <h3 class="dg-banner-title">Six major design goals</h3>
+        <div class="dg-banner-desc">
+          <span class="dg-badge">DISTRIBUTED OS</span>
+          <span>The design of a distributed operating system focuses on these six goals, which together decide how effective it will be.</span>
+        </div>
+      </div>
+
+      <div class="modules-accordion">
+
+        <!-- GOAL 1: TRANSPARENCY -->
+        <div class="concept-card active" data-concept="goal-transparency">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">01</span> DESIGN GOAL</div>
+            <h3 class="concept-name">Transparency</h3>
+            <p class="concept-summary">Hide the complexity of distributed resources from users and programs.</p>
+          </div>
+          <div class="concept-body">
+            <div class="path-inspect-box">
+              <span class="path-label">Local File Path on Workstation 1:</span>
+              <code class="path-code">C:\Users\Student\Documents\Exam_Grades.csv</code>
+            </div>
+            <button class="sim-btn btn-primary" id="btn-goal-transparency">
+              <span class="btn-icon">🔍</span>
+              <span class="btn-text">
+                <strong>Access Remote File via Local Path</strong>
+                <small>Demonstrate Location & Access Transparency</small>
+              </span>
+            </button>
+            <div class="concept-explanation">
+              <strong>How Distributed OS Achieves This:</strong> The Virtual File System (VFS) intercepts local system calls and maps them to remote addresses (`192.168.1.50:/var/db/`) without the user needing to know physical network locations.
+            </div>
+          </div>
+        </div>
+
+        <!-- GOAL 2: OPENNESS -->
+        <div class="concept-card" data-concept="goal-openness">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">02</span> DESIGN GOAL</div>
+            <h3 class="concept-name">Openness</h3>
+            <p class="concept-summary">Support standard interfaces and protocols so different systems interoperate.</p>
+          </div>
+          <div class="concept-body">
+            <div class="os-pills-row">
+              <span class="os-pill linux">🐧 Node 1: Linux POSIX</span>
+              <span class="os-pill windows">🪟 Node 2: Windows NT</span>
+              <span class="os-pill macos">🍎 Node 3: macOS Darwin</span>
+            </div>
+            <div class="btn-grid">
+              <button class="sim-btn btn-primary" id="btn-goal-openness">
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">
+                  <strong>Exchange Data via Standard JSON-RPC</strong>
+                  <small>Multi-OS cross-platform interoperability</small>
+                </span>
+              </button>
+              <button class="sim-btn" id="btn-inspect-packet">
+                <span class="btn-icon">📜</span>
+                <span class="btn-text">
+                  <strong>Inspect Protocol Packet Structure</strong>
+                  <small>View RFC-compliant JSON-RPC & HTTP header</small>
+                </span>
+              </button>
+            </div>
+            <div class="concept-explanation">
+              <strong>How Distributed OS Achieves This:</strong> Conforms to open RFC standards and standard IDL (Interface Definition Language), preventing vendor lock-in and allowing Linux, Windows, and macOS to communicate seamlessly.
+            </div>
+          </div>
+        </div>
+
+        <!-- GOAL 3: SCALABILITY -->
+        <div class="concept-card" data-concept="goal-scalability">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">03</span> DESIGN GOAL</div>
+            <h3 class="concept-name">Scalability</h3>
+            <p class="concept-summary">Handle increasing numbers of users, resources and locations.</p>
+          </div>
+          <div class="concept-body">
+            <div class="scale-stat-card">
+              <div class="stat-unit">
+                <span class="stat-num text-cyan" id="dg-scale-count">5</span>
+                <span class="stat-lbl">Connected Workstations</span>
+              </div>
+              <div class="stat-unit">
+                <span class="stat-num text-green" id="dg-scale-mips">75.0</span>
+                <span class="stat-lbl">Cluster Capacity (GFLOPS)</span>
+              </div>
+            </div>
+            <div class="btn-grid">
+              <button class="sim-btn" id="btn-dg-add-node">
+                <span class="btn-icon">➕</span>
+                <span class="btn-text">
+                  <strong>Add Computer</strong>
+                  <small>Scale out cluster capacity</small>
+                </span>
+              </button>
+              <button class="sim-btn" id="btn-dg-remove-node">
+                <span class="btn-icon">➖</span>
+                <span class="btn-text">
+                  <strong>Remove Computer</strong>
+                  <small>Gracefully decommission</small>
+                </span>
+              </button>
+            </div>
+            <div class="concept-explanation">
+              <strong>How Distributed OS Achieves This:</strong> Modular decentralized algorithms and peer-to-peer discovery avoid central bottlenecks, enabling smooth horizontal expansion as demand grows.
+            </div>
+          </div>
+        </div>
+
+        <!-- GOAL 4: RELIABILITY -->
+        <div class="concept-card" data-concept="goal-reliability">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">04</span> DESIGN GOAL</div>
+            <h3 class="concept-name">Reliability</h3>
+            <p class="concept-summary">Continue functioning despite component failures.</p>
+          </div>
+          <div class="concept-body">
+            <div class="server-status-grid">
+              <div class="server-node-indicator active" id="dg-indicator-srv-a">
+                <div class="srv-badge green">PRIMARY</div>
+                <div class="srv-name">Server DB-01</div>
+                <div class="srv-state" id="dg-state-srv-a">ONLINE (100% HEALTH)</div>
+              </div>
+              <div class="server-node-indicator" id="dg-indicator-srv-b">
+                <div class="srv-badge cyan">STANDBY REPLICA</div>
+                <div class="srv-name">Server DB-02</div>
+                <div class="srv-state" id="dg-state-srv-b">SYNCED & READY</div>
+              </div>
+            </div>
+            <div class="btn-grid">
+              <button class="sim-btn btn-danger" id="btn-dg-crash-server">
+                <span class="btn-icon">💥</span>
+                <span class="btn-text">
+                  <strong>Simulate Server Failure</strong>
+                  <small>Demonstrate fault tolerance & Paxos failover</small>
+                </span>
+              </button>
+              <button class="sim-btn" id="btn-dg-recover-server" disabled>
+                <span class="btn-icon">🛡️</span>
+                <span class="btn-text">
+                  <strong>Restore Primary Server</strong>
+                  <small>Re-sync state & heal cluster</small>
+                </span>
+              </button>
+            </div>
+            <div class="concept-explanation">
+              <strong>How Distributed OS Achieves This:</strong> Data replication and consensus protocols (Raft/Paxos) detect heartbeat timeouts and promote standby nodes with zero user downtime.
+            </div>
+          </div>
+        </div>
+
+        <!-- GOAL 5: PERFORMANCE -->
+        <div class="concept-card" data-concept="goal-performance">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">05</span> DESIGN GOAL</div>
+            <h3 class="concept-name">Performance</h3>
+            <p class="concept-summary">Use distributed resources efficiently and keep communication overhead low.</p>
+          </div>
+          <div class="concept-body">
+            <div class="task-spec-box">
+              <div class="spec-row">
+                <span class="spec-label">Distributed Workload:</span>
+                <span class="spec-val">600 Records / 3 Parallel Threads</span>
+              </div>
+            </div>
+            <button class="sim-btn btn-primary" id="btn-dg-start-parallel">
+              <span class="btn-icon">⚡</span>
+              <span class="btn-text">
+                <strong>Execute Parallel Task</strong>
+                <small>Measure linear speedup and CPU utilization</small>
+              </span>
+            </button>
+            <div class="concept-explanation">
+              <strong>How Distributed OS Achieves This:</strong> Intelligent load balancing, caching, and thread partitioning maximize CPU parallelism while minimizing inter-node network round-trips.
+            </div>
+          </div>
+        </div>
+
+        <!-- GOAL 6: FLEXIBILITY -->
+        <div class="concept-card" data-concept="goal-flexibility">
+          <div class="concept-header">
+            <div class="concept-tag"><span class="tag-num">06</span> DESIGN GOAL</div>
+            <h3 class="concept-name">Flexibility</h3>
+            <p class="concept-summary">Support different hardware and software environments.</p>
+          </div>
+          <div class="concept-body">
+            <div class="hw-profile-list">
+              <div class="hw-item">
+                <span class="hw-tag x86">⚡ Node 1</span>
+                <span class="hw-desc">x86_64 Multi-Core CPU (Compilation Task)</span>
+              </div>
+              <div class="hw-item">
+                <span class="hw-tag arm">🔋 Node 2</span>
+                <span class="hw-desc">ARM64 Low-Power SoC (Edge Sensor I/O)</span>
+              </div>
+              <div class="hw-item">
+                <span class="hw-tag gpu">🚀 Node 3</span>
+                <span class="hw-desc">NVIDIA Tensor GPU (Deep Neural Inference)</span>
+              </div>
+            </div>
+            <button class="sim-btn btn-primary" id="btn-goal-flexibility">
+              <span class="btn-icon">🧩</span>
+              <span class="btn-text">
+                <strong>Schedule Heterogeneous Workloads</strong>
+                <small>Assign 3 distinct tasks to optimal hardware</small>
+              </span>
+            </button>
+            <div class="concept-explanation">
+              <strong>How Distributed OS Achieves This:</strong> Microkernel architectures separate policy from mechanism, abstracting varied CPU instruction sets (x86, ARM) and accelerators into a single unified API.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SIDEBAR FOOTER -->
+    <div class="sidebar-footer">
+      <div class="footer-tip">
+        <span>💡</span> <em>Tip: Click & drag to rotate 3D view; scroll to zoom in/out; right-click to pan.</em>
+      </div>
+    </div>
+  </aside>
+
+  <!-- COLLAPSE / EXPAND SIDEBAR BUTTON -->
+  <button id="toggle-sidebar-btn" title="Toggle Control Panel">◀</button>
+
+  <!-- FLOATING LIVE EVENT TERMINAL HUD (Bottom Left) -->
+  <div id="live-terminal-hud">
+    <div class="terminal-header">
+      <span class="terminal-dot"></span>
+      <span class="terminal-title">DOS KERNEL EVENT LOG</span>
+      <button id="terminal-clear" title="Clear Logs">Clear</button>
+    </div>
+    <div class="terminal-log-content custom-scrollbar" id="terminal-logs">
+      <div class="log-entry log-system">[INIT] Distributed OS Orchestrator online. Single-System Image active.</div>
+      <div class="log-entry log-info">[DISCOVERY] 5 Workstation nodes registered on high-speed optical switch.</div>
+      <div class="log-entry log-success">[STORAGE] Replicated Database Cluster mounted (DB-01 Primary, DB-02 Replica).</div>
+      <div class="log-entry log-success">[PRINTER] Network Spooler ready on node: PRN-SHARED.</div>
+    </div>
+  </div>
+
+  <!-- NODE INSPECTION MODAL / OVERLAY (When user clicks a 3D computer) -->
+  <div id="node-inspector" class="hidden">
+    <div class="inspector-card">
+      <div class="inspector-header">
+        <h3 id="inspector-node-title">Node 1 (Admin Workstation)</h3>
+        <button id="inspector-close">✕</button>
+      </div>
+      <div class="inspector-body">
+        <div class="inspector-metric-row">
+          <span>IP Address:</span>
+          <span class="text-cyan" id="inspector-ip">192.168.1.101</span>
+        </div>
+        <div class="inspector-metric-row">
+          <span>OS Kernel:</span>
+          <span id="inspector-os">Distributed Microkernel v3.4</span>
+        </div>
+        <div class="inspector-metric-row">
+          <span>Status:</span>
+          <span class="text-green" id="inspector-status">ONLINE / IDLE</span>
+        </div>
+        <div class="inspector-metric-row">
+          <span>CPU Utilization:</span>
+          <div class="mini-bar-track"><div class="mini-bar-fill" id="inspector-cpu" style="width: 18%;"></div></div>
+        </div>
+        <div class="inspector-metric-row">
+          <span>Shared Memory:</span>
+          <span id="inspector-mem">32 GB Distributed Virtual Memory</span>
+        </div>
+      </div>
+      <div class="inspector-actions">
+        <button class="sim-btn" id="btn-node-test-query">Query DB</button>
+        <button class="sim-btn" id="btn-node-test-print">Print File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PACKET INSPECTOR MODAL (For Openness Demo) -->
+  <div id="packet-inspector-modal" class="modal-overlay hidden">
+    <div class="modal-box custom-scrollbar">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge cyan">OPEN PROTOCOL INSPECTOR</span>
+          <h3>Standard JSON-RPC 2.0 / HTTP Header</h3>
+        </div>
+        <button class="modal-close" id="packet-inspector-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-intro">
+          This payload proves <strong>Openness</strong>: Linux (Node 1) invokes a standard method on Windows (Node 2) without vendor lock-in.
+        </p>
+        <div class="code-viewer">
+          <div class="code-header">
+            <span>HTTP/1.1 POST /api/v2/rpc</span>
+            <span>Content-Type: application/json</span>
+          </div>
+          <pre class="code-content"><code>{
+  <span class="json-key">"jsonrpc"</span>: <span class="json-str">"2.0"</span>,
+  <span class="json-key">"method"</span>: <span class="json-str">"distributed_exec_sync"</span>,
+  <span class="json-key">"params"</span>: {
+    <span class="json-key">"origin_os"</span>: <span class="json-str">"Linux-POSIX (Ubuntu 24.04)"</span>,
+    <span class="json-key">"target_os"</span>: <span class="json-str">"Windows 11 Enterprise (NT)"</span>,
+    <span class="json-key">"protocol"</span>: <span class="json-str">"Standard POSIX/RPC IEEE 1003.1c"</span>,
+    <span class="json-key">"payload_action"</span>: <span class="json-str">"READ_CENTRAL_REGISTRY"</span>
+  },
+  <span class="json-key">"id"</span>: <span class="json-num">48921</span>
+}</code></pre>
+        </div>
+        <div class="inspector-note">
+          ✔ Conforms to RFC 7159 & JSON-RPC 2.0 specifications.<br>
+          ✔ Linux, Windows, and macOS interoperate cleanly via standard interfaces.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSPARENCY VFS MODAL (For Transparency Demo) -->
+  <div id="transparency-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge green">LOCATION TRANSPARENCY VERIFIED</span>
+          <h3>Virtual File System (VFS) Resolution</h3>
+        </div>
+        <button class="modal-close" id="transparency-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="transparency-compare-grid">
+          <div class="compare-card local">
+            <span class="compare-label">WHAT THE USER SEES (LOCAL ILLUSION):</span>
+            <code class="compare-path">C:\Users\Student\Documents\Exam_Grades.csv</code>
+            <p>User application calls standard local I/O: <code>fopen("Exam_Grades.csv")</code>.</p>
+          </div>
+          <div class="compare-arrow">➔</div>
+          <div class="compare-card remote">
+            <span class="compare-label">WHAT THE DISTRIBUTED OS ACTUALLY DOES:</span>
+            <code class="compare-path">nfs://192.168.1.50/srv/storage/cluster/grades.csv</code>
+            <p>VFS transparently redirected the request across network cables to remote Server DB-01.</p>
+          </div>
+        </div>
+        <div class="file-data-preview">
+          <span class="preview-title">Retrieved File Contents:</span>
+          <pre>StudentID,Name,Course,GPA,Status
+STU-2026-01,Madhavan G,Distributed Systems,3.95,PASSED
+STU-2026-02,Sarah Chen,Distributed Systems,3.90,PASSED
+STU-2026-03,Alex Rivera,Distributed Systems,3.85,PASSED</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRESENTATION / TEACHING MODE OVERLAY (Full-Screen Projector Layout) -->
+  <div id="presentation-overlay" class="hidden">
+    <!-- Top Presentation Banner -->
+    <div class="pres-top-bar">
+      <div class="pres-brand">
+        <span class="pres-badge">SEMINAR PRESENTATION</span>
+        <span class="pres-title" id="pres-seminar-title">DISTRIBUTED OPERATING SYSTEM: SIX MAJOR DESIGN GOALS</span>
+      </div>
+
+      <!-- Presentation Track Switcher -->
+      <div class="pres-track-switch">
+        <button class="pres-track-btn" id="pres-track-need" data-track="need">Need & Importance</button>
+        <button class="pres-track-btn active" id="pres-track-goals" data-track="goals">Six Design Goals</button>
+      </div>
+
+      <div class="pres-slide-tracker">
+        <span class="slide-indicator" id="pres-slide-num">SLIDE 1 OF 6</span>
+      </div>
+
+      <button id="pres-exit-btn" class="nav-btn" title="Exit Presentation Mode">
+        <span>✕</span>
+        <span>Exit Presentation</span>
+      </button>
+    </div>
+
+    <!-- Bottom Stage Banner (Large, Legible Projector Subtitle & Controls) -->
+    <div class="pres-bottom-stage">
+      <div class="pres-concept-card">
+        <div class="pres-concept-heading-row">
+          <span class="pres-step-badge" id="pres-step-badge">GOAL 01</span>
+          <h2 class="pres-concept-heading" id="pres-heading">Transparency</h2>
+        </div>
+        <p class="pres-concept-body" id="pres-body">
+          Hide the complexity of distributed resources from users and programs. The distributed system achieves single-system image (SSI) by giving remote files and devices the illusion of being local.
+        </p>
+        <div class="pres-key-points" id="pres-points">
+          <span class="key-point-tag">✔ Location Transparency</span>
+          <span class="key-point-tag">✔ Access Transparency</span>
+          <span class="key-point-tag">✔ Single-System Image</span>
+        </div>
+      </div>
+
+      <!-- Presentation Interactive Action & Navigation Buttons -->
+      <div class="pres-controls-row">
+        <button class="pres-action-btn" id="pres-demo-btn">
+          <span class="icon">▶</span>
+          <span id="pres-demo-btn-label">Run Live 3D Demonstration</span>
+        </button>
+
+        <div class="pres-nav-buttons">
+          <button class="pres-nav-btn" id="pres-prev-btn" title="Previous Slide (Left Arrow)">
+            <span>◀ Previous</span>
+          </button>
+          <button class="pres-nav-btn" id="pres-next-btn" title="Next Slide (Right Arrow or Space)">
+            <span>Next ▶</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIO SYNTHESIS & NOTIFICATION TOAST -->
+  <div id="toast-notification" class="toast-hidden">
+    <span id="toast-icon">ℹ️</span>
+    <span id="toast-message">Message text here</span>
+  </div>
+
+  <!-- Main Application Script -->
+  <script src="script.js"></script>
+</body>
+</html>
