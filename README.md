@@ -10,9 +10,9 @@ The simulation contains two complete curriculum sections with **12 interactive 3
 
 ---
 
-## 🎯 Section 1: Six Major Design Goals (Madhavan G)
+## 🎯 Section 1: Six Major Design Goals 
 
-Directly matches the seminar slide **"03 · DESIGN GOALS · MADHAVAN G — Six major design goals"**:
+Directly matches the seminar slide **"03 · DESIGN GOALS — Six major design goals"**:
 
 ```
 +---------------------------------------------------------------------------------------------------+
