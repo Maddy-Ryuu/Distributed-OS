@@ -1,6 +1,5 @@
 # DISTRIBUTED OPERATING SYSTEM – NEED, IMPORTANCE & DESIGN GOALS
 ### Interactive 3D Educational Simulation for College Seminar Presentation
-**Presenter:** Madhavan G | **Course:** Distributed Systems / Operating Systems
 
 This interactive 3D simulation demonstrates how autonomous computer nodes, peripheral devices, and replicated storage servers collaborate under a **Single-System Image (SSI)** to form a resilient, high-speed **Distributed Operating System (DOS)**.
 
